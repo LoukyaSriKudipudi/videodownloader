@@ -1,7 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const { exec } = require("child_process");
-require("./bot");
 const bot = require("./bot");
 const path = require("path");
 const fs = require("fs");
@@ -36,7 +35,7 @@ app.post("/download", (req, res) => {
 
   // Build yt-dlp command
   const formatOption = audioonly ? "-x --audio-format mp3" : "-f mp4";
-  const ytDlpCommand = `yt-dlp ${formatOption} -o "${filePath}" "${videoUrl}"`;
+  const ytDlpCommand = `./bin/yt-dlp ${formatOption} -o "${filePath}" "${videoUrl}"`;
 
   // Execute yt-dlp
   exec(ytDlpCommand, async (err, stdout, stderr) => {
