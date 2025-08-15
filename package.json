@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-  "start": "node index.js",
-  "postinstall": "mkdir -p ./bin && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./bin/yt-dlp && chmod +x ./bin/yt-dlp"
-}
-,
+    "start": "node index.js",
+    "postinstall": "mkdir -p ./bin && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./bin/yt-dlp && chmod +x ./bin/yt-dlp"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -14,6 +13,7 @@
   "dependencies": {
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "telegraf": "^4.16.3"
+    "telegraf": "^4.16.3",
+    "yt-dlp-exec": "^1.0.2"
   }
 }
