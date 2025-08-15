@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const { exec } = require("child_process");
+require("./bot");
 const bot = require("./bot");
 const path = require("path");
 const fs = require("fs");
