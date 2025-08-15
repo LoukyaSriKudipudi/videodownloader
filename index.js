@@ -1,9 +1,9 @@
 require("dotenv").config();
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { exec } = require("child_process");
 const bot = require("./bot");
-const ytdlp = require("yt-dlp-exec").default; // Import yt-dlp-exec
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 app.use(express.json());
@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
 app.use(express.static(path.join(__dirname, "public")));
 
 // Handle video/audio download
-app.post("/download", async (req, res) => {
+app.post("/download", (req, res) => {
   const videoUrl = req.body.url;
   const audioonly =
     req.body.audioonly === true || req.body.audioonly === "true";
@@ -33,43 +33,55 @@ app.post("/download", async (req, res) => {
   const fileName = `video_${Date.now()}.${ext}`;
   const filePath = path.join(downloadsFolder, fileName);
 
-  try {
-    // Use yt-dlp-exec instead of exec
-    await ytdlp(videoUrl, {
-      output: filePath,
-      format: audioonly ? "bestaudio" : "mp4",
-      extractAudio: audioonly,
-      audioFormat: audioonly ? "mp3" : undefined,
-    });
+  // Build yt-dlp command
+  const formatOption = audioonly ? "-x --audio-format mp3" : "-f mp4";
+  const ytDlpCommand = `./bin/yt-dlp ${formatOption} -o "${filePath}" "${videoUrl}"`;
 
-    const stats = fs.statSync(filePath);
-    let responseMessage;
-
-    if (stats.size > 50 * 1024 * 1024) {
-      responseMessage = `File too large: ${(stats.size / 1024 / 1024).toFixed(
-        2
-      )} MB`;
-      await bot.telegram.sendMessage(process.env.GROUP_ID, responseMessage);
-    } else {
-      if (audioonly) {
-        await bot.telegram.sendAudio(process.env.GROUP_ID, {
-          source: filePath,
-        });
-      } else {
-        await bot.telegram.sendVideo(process.env.GROUP_ID, {
-          source: filePath,
-        });
-      }
-      responseMessage = `Download complete! Check the Telegram group for your file: https://t.me/loukyaecho`;
+  // Execute yt-dlp
+  exec(ytDlpCommand, async (err, stdout, stderr) => {
+    if (err) {
+      console.error("yt-dlp error:", err, stderr);
+      return res
+        .status(500)
+        .json({ message: "Download failed", error: err.message });
     }
 
-    res.status(200).json({ message: responseMessage });
-  } catch (err) {
-    console.error("yt-dlp error:", err);
-    res.status(500).json({ message: "Download failed", error: err.message });
-  } finally {
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  }
+    try {
+      if (!fs.existsSync(filePath)) {
+        return res.status(500).json({ message: "File was not downloaded." });
+      }
+
+      const stats = fs.statSync(filePath);
+      let responseMessage;
+
+      if (stats.size > 50 * 1024 * 1024) {
+        responseMessage = `File too large: ${(stats.size / 1024 / 1024).toFixed(
+          2
+        )} MB`;
+        await bot.telegram.sendMessage(process.env.GROUP_ID, responseMessage);
+      } else {
+        if (audioonly) {
+          await bot.telegram.sendAudio(process.env.GROUP_ID, {
+            source: filePath,
+          });
+        } else {
+          await bot.telegram.sendVideo(process.env.GROUP_ID, {
+            source: filePath,
+          });
+        }
+        responseMessage = `Download complete! Check the Telegram group for your file: https://t.me/loukyaecho`;
+      }
+
+      res.status(200).json({ message: responseMessage });
+    } catch (err) {
+      console.error("Telegram upload error:", err);
+      res
+        .status(500)
+        .json({ message: "Telegram upload failed", error: err.message });
+    } finally {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+  });
 });
 
 // Start server
