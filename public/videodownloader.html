@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Downloader</title>
+    <link rel="stylesheet" href="/videodownloader.css" />
+  </head>
+  <body>
+    <div id="container">
+      <h1>Video Downloader</h1>
+
+      <form id="videoDownloaderForm">
+        <input
+          type="text"
+          name="text"
+          id="text"
+          class="inputURL"
+          placeholder="Paste Your Video Link..."
+        />
+        <select name="downloadOptions" id="downloadOptions">
+          <option id="selectOption" value="audioOnly">Video & Audio</option>
+          <option id="selectOption" value="audioOnly">Audio Only</option>
+        </select>
+
+        <button type="submit">Submit</button>
+      </form>
+      <p id="DownloadStatus"></p>
+    </div>
+    <script src="/videodownloader.js"></script>
+  </body>
+</html>
